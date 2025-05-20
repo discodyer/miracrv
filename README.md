@@ -2,7 +2,7 @@
 
 琪迹小车，基于RISC-V开发板的ROS小车
 
-组装和说明文档请查看：[MiracRV_docs](https://github.com/discodyer/miracrv_docs) [Gitlab](../../../../miracrv_docs)
+组装和说明文档请查看：[MiracRV_docs](https://github.com/discodyer/miracrv_docs) [Gitlab](https://isrc.iscas.ac.cn/gitlab/ros2-rv/miracrv_docs)
 
 ## 仓库包含的软件包
 
@@ -13,3 +13,37 @@
 - `miracrv_bringup` 提供launch脚本，一键启动小车节点
 
 - `miracrv_description` 提供小车模型等
+
+## ArduRover参数设置
+
+我们使用ArduPilot的EKF3进行位姿估计，EKF3依赖外部传感器，比如GPS、光流、车轮编码器、视觉里程计、激光雷达等的数据，否则无法在Guided模式下解锁。
+
+下面的配置是在室内情况下，无GPS，使用激光雷达进行位姿估计。如果是室外使用，可以加装GPS模块并按照ArduPilot相关文档配置。
+
+- `FRAME_TYPE` = 2 设置机架类型为OmniX
+- `SERVO1_FUNCTION` = 33 设置为Motor1
+- `SERVO2_FUNCTION` = 34 设置为Motor2
+- `SERVO3_FUNCTION` = 35 设置为Motor3
+- `SERVO4_FUNCTION` = 36 设置为Motor4
+
+- `GPS_TYPE` = 0 禁用GPS
+- `ARMING_CHECK` = 388598 禁用GPS相关解锁检查
+- `AHRS_GPS_USE` = 0 禁用GPS
+- `EK3_GPS_CHECK` = 0 禁用GPS检查
+- `EK3_GSF_RUN_MASK` = 0 禁用EKF-GSF
+- `EK3_GSF_USE_MASK` = 0 禁用EKF-GSF
+- `AHRS_OPTIONS` = 3 禁止EKF3自动回退到DCM
+
+- `EK3_SRC_OPTIONS` = 0 速度融合选项，因为没有其他速度源所以为0
+- `AHRS_EKF_TYPE` = 3 启用EKF3
+- `EK2_ENABLE` = 0 禁用 EKF2
+- `EK3_ENABLE` = 1 启用 EKF3
+- `EK3_SRC1_POSXY` = 6 将位置水平源设置为 ExternalNAV
+- `EK3_SRC1_POSZ` = 1 将位置垂直源设置为气压计
+- `EK3_SRC1_VELXY` = 6 将速度水平源设置为 ExternalNAV
+- `EK3_SRC1_VELZ` = 6 将垂直速度源设置为 ExternalNAV
+- `EK3_SRC1_YAW` = 6 将偏航源设置为 ExternalNAV
+- `VISO_TYPE` = 1 启用视觉里程计类型为 MavLink
+
+其他参数如遥控器接收机，电调类型等需要根据购买的型号不同来修改相关参数，并且在修改完上述参数后还需要常规的进行校准加速度计、校准水平、校准遥控器、校准磁罗盘等操作，可以使用MissionPlanner地面站完成。
+
