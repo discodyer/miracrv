@@ -20,22 +20,22 @@
 
 下面的配置是在室内情况下，无GPS，使用激光雷达进行位姿估计。如果是室外使用，可以加装GPS模块并按照ArduPilot相关文档配置。
 
-- `FRAME_TYPE` = 2 设置机架类型为OmniX
-- `SERVO1_FUNCTION` = 33 设置为Motor1
-- `SERVO2_FUNCTION` = 34 设置为Motor2
-- `SERVO3_FUNCTION` = 35 设置为Motor3
-- `SERVO4_FUNCTION` = 36 设置为Motor4
+- `FRAME_TYPE` = 2 设置机架类型为 OmniX
+- `SERVO1_FUNCTION` = 33 设置为 Motor1
+- `SERVO2_FUNCTION` = 34 设置为 Motor2
+- `SERVO3_FUNCTION` = 35 设置为 Motor3
+- `SERVO4_FUNCTION` = 36 设置为 Motor4
 
-- `GPS_TYPE` = 0 禁用GPS
-- `ARMING_CHECK` = 388598 禁用GPS相关解锁检查
-- `AHRS_GPS_USE` = 0 禁用GPS
-- `EK3_GPS_CHECK` = 0 禁用GPS检查
-- `EK3_GSF_RUN_MASK` = 0 禁用EKF-GSF
-- `EK3_GSF_USE_MASK` = 0 禁用EKF-GSF
-- `AHRS_OPTIONS` = 3 禁止EKF3自动回退到DCM
+- `GPS_TYPE` = 0 禁用 GPS
+- `ARMING_CHECK` = 388598 禁用 GPS 相关解锁检查
+- `AHRS_GPS_USE` = 0 禁用 GPS
+- `EK3_GPS_CHECK` = 0 禁用 GPS 检查
+- `EK3_GSF_RUN_MASK` = 0 禁用 EKF-GSF
+- `EK3_GSF_USE_MASK` = 0 禁用 EKF-GSF
+- `AHRS_OPTIONS` = 3 禁止 EKF3 自动回退到 DCM
 
-- `EK3_SRC_OPTIONS` = 0 速度融合选项，因为没有其他速度源所以为0
-- `AHRS_EKF_TYPE` = 3 启用EKF3
+- `EK3_SRC_OPTIONS` = 0 速度融合选项，因为没有其他速度源所以为 0
+- `AHRS_EKF_TYPE` = 3 启用 EKF3
 - `EK2_ENABLE` = 0 禁用 EKF2
 - `EK3_ENABLE` = 1 启用 EKF3
 - `EK3_SRC1_POSXY` = 6 将位置水平源设置为 ExternalNAV
@@ -47,3 +47,4 @@
 
 其他参数如遥控器接收机，电调类型等需要根据购买的型号不同来修改相关参数，并且在修改完上述参数后还需要常规的进行校准加速度计、校准水平、校准遥控器、校准磁罗盘等操作，可以使用MissionPlanner地面站完成。
 
+sudo apt-get install libpcap0.8-dev

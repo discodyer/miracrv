@@ -1,0 +1,15 @@
+ardu_rover_node:
+  ros__parameters:
+    # 自动解锁
+    auto_arm: false
+    
+    # 默认模式
+    default_mode: "GUIDED"
+    
+    # GPS原点设置（如果需要）
+    gps_origin_lat: 0.0
+    gps_origin_lon: 0.0
+    
+    # 话题重映射（如果需要）
+    # cmd_vel_topic: "/miracrv/cmd_vel"
+    # odom_topic: "/mavros/local_position/odom"
