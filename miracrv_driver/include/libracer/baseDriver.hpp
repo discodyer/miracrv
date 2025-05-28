@@ -24,8 +24,8 @@ public:
      * @param odomTopic 里程计话题名称
      */
     BaseDriver(rclcpp::Node::SharedPtr node, 
-               const std::string& cmdVelTopic = "/cmd_vel",
-               const std::string& odomTopic = "/odom");
+               const std::string& cmdVelTopic = "/miracrv/cmd_vel",
+               const std::string& odomTopic = "/miracrv/odom");
 
     /**
      * @brief 虚析构函数

@@ -34,8 +34,8 @@ bool BaseDriver::initialize()
         tfBroadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(node_);
         
         RCLCPP_INFO(getLogger(), "BaseDriver initialized successfully");
-        RCLCPP_INFO(getLogger(), "Subscribing to: %s", cmdVelTopic_.c_str());
-        RCLCPP_INFO(getLogger(), "Publishing to: %s", odomTopic_.c_str());
+        RCLCPP_INFO(getLogger(), "Subscribing cmd_vel to: %s", cmdVelTopic_.c_str());
+        RCLCPP_INFO(getLogger(), "Publishing odometry to: %s", odomTopic_.c_str());
         
         return true;
     }

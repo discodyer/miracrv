@@ -1,14 +1,47 @@
+# ArduRover节点配置
 ardu_rover_node:
   ros__parameters:
     # 自动解锁
-    auto_arm: false
+    auto_arm: true
     
     # 默认模式
     default_mode: "GUIDED"
     
     # GPS原点设置（如果需要）
-    gps_origin_lat: 0.0
-    gps_origin_lon: 0.0
+    gps_origin:
+      enabled: true
+      latitude: 39.979982
+      longitude: 116.335492
+      # altitude: 0.0
+
+    # 速度限制
+    velocity_limits:
+      max_linear_x: 0.5  # m/s
+      max_linear_y: 0.5  # m/s
+      max_angular_z: 0.2  # rad/s
+    
+    # 超时设置
+    timeouts:
+      connection: 10.0  # 秒
+      service_call: 3.0  # 秒
+    
+    # 话题配置
+    topics:
+      cmd_vel: "/miracrv/cmd_vel"
+      odom: "/miracrv/odom"
+    
+    # TF配置
+    tf:
+      publish_tf: false
+      base_frame_id: "base_link"
+      odom_frame_id: "odom"
+    
+    # 安全功能
+    # safety:
+    #   enable_watchdog: true
+    #   watchdog_timeout: 2.0  # 秒，无命令时停止
+    #   enable_geofence: false
+    #   geofence_radius: 50.0  # 米
     
     # 话题重映射（如果需要）
     # cmd_vel_topic: "/miracrv/cmd_vel"

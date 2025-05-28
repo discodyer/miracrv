@@ -102,6 +102,17 @@ protected:
      */
     void setBodyVelocity(double vx, double vy, double yawRate);
 
+    /**
+     * @brief 停止移动
+     */
+    void setBreak();
+
+    /**
+     * @brief 设置车体坐标系下的偏航角速度
+     * @param yawRate 偏航角速度（弧度/秒）
+     */
+    void setAngularRate(double yawRate);
+
 private:
     /**
      * @brief MAVROS状态回调函数

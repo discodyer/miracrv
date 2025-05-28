@@ -1,15 +1,18 @@
 #include "libracer/arduRoverDriver.hpp"
 #include <mavros_msgs/msg/command_code.hpp>
 #include <chrono>
+#include "libracer/bound.hpp"
 
 namespace libracer
 {
 
 ArduRoverDriver::ArduRoverDriver(rclcpp::Node::SharedPtr node)
-    : BaseDriver(node, "/miracrv/cmd_vel", "/mavros/local_position/odom")
+    : BaseDriver(node, "/miracrv/cmd_vel", "/miracrv/odom")
     , autoArm_(false)
     , defaultMode_("GUIDED")
 {
+    // 初始化currentState_以避免未定义行为
+    currentState_ = mavros_msgs::msg::State();
     RCLCPP_INFO(getLogger(), "ArduRoverDriver constructor called");
 }
 
@@ -34,14 +37,12 @@ bool ArduRoverDriver::initialize()
             std::bind(&ArduRoverDriver::stateCallback, this, std::placeholders::_1));
         
         // 创建服务客户端
-        armingClient_ = node_->create_client<mavros_msgs::srv::CommandBool>("mavros/cmd/arming");
-        setModeClient_ = node_->create_client<mavros_msgs::srv::SetMode>("mavros/set_mode");
-        commandClient_ = node_->create_client<mavros_msgs::srv::CommandLong>("mavros/cmd/command");
-        
-        // 等待MAVROS连接
-        if (!waitForConnection(5.0)) {
-            RCLCPP_WARN(getLogger(), "Failed to connect to MAVROS within timeout");
-        }
+        armingClient_ = node_->create_client<mavros_msgs::srv::CommandBool>(
+            "mavros/cmd/arming");
+        setModeClient_ = node_->create_client<mavros_msgs::srv::SetMode>(
+            "mavros/set_mode");
+        commandClient_ = node_->create_client<mavros_msgs::srv::CommandLong>(
+            "mavros/cmd/command");
         
         RCLCPP_INFO(getLogger(), "ArduRoverDriver initialized successfully");
         return true;
@@ -78,7 +79,7 @@ void ArduRoverDriver::setBodyVelocity(double vx, double vy, double yawRate)
                          mavros_msgs::msg::PositionTarget::IGNORE_AFZ |
                          mavros_msgs::msg::PositionTarget::IGNORE_VZ;  // 忽略Z轴速度（地面车辆）
     
-    // 处理偏航率
+    // // 处理偏航率
     if (std::fabs(yawRate) < 1e-3) {
         rawTarget.type_mask |= mavros_msgs::msg::PositionTarget::IGNORE_YAW_RATE;
         rawTarget.yaw = 0;
@@ -99,6 +100,16 @@ void ArduRoverDriver::setBodyVelocity(double vx, double vy, double yawRate)
     positionTargetPub_->publish(rawTarget);
 }
 
+void ArduRoverDriver::setBreak()
+{
+	setBodyVelocity(0.0, 0.0, 0.0);
+}
+
+void ArduRoverDriver::setAngularRate(double yawRate)
+{
+    setBodyVelocity(0.0, 0.0, yawRate);
+}
+
 void ArduRoverDriver::setGlobalOrigin(double latitude, double longitude, double altitude)
 {
     // 构建 GeoPointStamped 消息
@@ -116,7 +127,7 @@ void ArduRoverDriver::setGlobalOrigin(double latitude, double longitude, double 
 bool ArduRoverDriver::arm()
 {
     // 检查服务是否可用
-    if (!armingClient_->wait_for_service(std::chrono::seconds(1))) {
+    if (!armingClient_->service_is_ready()) {
         RCLCPP_ERROR(getLogger(), "Arming service not available");
         return false;
     }
@@ -126,27 +137,29 @@ bool ArduRoverDriver::arm()
     request->value = true;
     
     // 发送请求
-    auto future = armingClient_->async_send_request(request);
-    if (rclcpp::spin_until_future_complete(node_->get_node_base_interface(), future) ==
-        rclcpp::FutureReturnCode::SUCCESS) {
-        auto result = future.get();
-        if (result->success) {
-            RCLCPP_INFO(getLogger(), "Vehicle armed successfully");
-            return true;
-        } else {
-            RCLCPP_ERROR(getLogger(), "Failed to arm vehicle: %s", result->result ? "true" : "false");
-            return false;
-        }
+    const auto future = armingClient_->async_send_request(request).future.share();
+    RCLCPP_INFO(getLogger(), "Sending Arm Command...");
+
+    if (future.valid() == false) {
+      RCLCPP_WARN(this->getLogger(), "Future object was in undefined state.");
+      return false;
     }
     
-    RCLCPP_ERROR(getLogger(), "Arming request timed out");
-    return false;
+    const auto result = future.get();
+
+    if (result->success) {
+        RCLCPP_INFO(getLogger(), "Vehicle armed successfully");
+        return true;
+    } else {
+        RCLCPP_ERROR(getLogger(), "Failed to arm vehicle");
+        return false;
+    }
 }
 
 bool ArduRoverDriver::disarm()
 {
     // 检查服务是否可用
-    if (!armingClient_->wait_for_service(std::chrono::seconds(1))) {
+    if (!armingClient_->service_is_ready()) {
         RCLCPP_ERROR(getLogger(), "Arming service not available");
         return false;
     }
@@ -156,24 +169,29 @@ bool ArduRoverDriver::disarm()
     request->value = false;
     
     // 发送请求
-    auto future = armingClient_->async_send_request(request);
-    if (rclcpp::spin_until_future_complete(node_->get_node_base_interface(), future) ==
-        rclcpp::FutureReturnCode::SUCCESS) {
-        auto result = future.get();
-        if (result->success) {
-            RCLCPP_INFO(getLogger(), "Vehicle disarmed successfully");
-            return true;
-        }
+    const auto future = armingClient_->async_send_request(request).future.share();
+    RCLCPP_INFO(getLogger(), "Sending Disarm Command...");
+
+    if (future.valid() == false) {
+      RCLCPP_WARN(this->getLogger(), "Future object was in undefined state.");
+      return false;
     }
     
-    RCLCPP_ERROR(getLogger(), "Disarming request failed");
-    return false;
+    const auto result = future.get();
+
+    if (result->success) {
+        RCLCPP_INFO(getLogger(), "Vehicle disarmed successfully");
+        return true;
+    } else {
+        RCLCPP_ERROR(getLogger(), "Disarming request failed");
+        return false;
+    }
 }
 
 bool ArduRoverDriver::setMoveSpeed(double speed)
 {
     // 检查服务是否可用
-    if (!commandClient_->wait_for_service(std::chrono::seconds(1))) {
+    if (!commandClient_->service_is_ready()) {
         RCLCPP_ERROR(getLogger(), "Command service not available");
         return false;
     }
@@ -185,24 +203,27 @@ bool ArduRoverDriver::setMoveSpeed(double speed)
     request->param2 = speed;
     
     // 发送请求
-    auto future = commandClient_->async_send_request(request);
-    if (rclcpp::spin_until_future_complete(node_->get_node_base_interface(), future) ==
-        rclcpp::FutureReturnCode::SUCCESS) {
-        auto result = future.get();
-        if (result->success) {
-            RCLCPP_INFO(getLogger(), "Move speed set to: %.2f m/s", speed);
-            return true;
-        }
+    const auto future = commandClient_->async_send_request(request).future.share();
+    RCLCPP_INFO(getLogger(), "Setting Move speed to: %.2f m/s", speed);
+
+    if (future.valid() == false) {
+      RCLCPP_WARN(this->getLogger(), "Future object was in undefined state.");
+      return false;
     }
-    
-    RCLCPP_ERROR(getLogger(), "Failed to set move speed");
-    return false;
+    const auto result = future.get();
+    if (result->success) {
+        RCLCPP_INFO(getLogger(), "Move speed set to: %.2f m/s", speed);
+        return true;
+    } else {
+        RCLCPP_ERROR(getLogger(), "Failed to set move speed");
+        return false;
+    }
 }
 
 bool ArduRoverDriver::setMode(const std::string& mode)
 {
     // 检查服务是否可用
-    if (!setModeClient_->wait_for_service(std::chrono::seconds(1))) {
+    if (!setModeClient_->service_is_ready()) {
         RCLCPP_ERROR(getLogger(), "Set mode service not available");
         return false;
     }
@@ -212,18 +233,23 @@ bool ArduRoverDriver::setMode(const std::string& mode)
     request->custom_mode = mode;
     
     // 发送请求
-    auto future = setModeClient_->async_send_request(request);
-    if (rclcpp::spin_until_future_complete(node_->get_node_base_interface(), future) ==
-        rclcpp::FutureReturnCode::SUCCESS) {
-        auto result = future.get();
-        if (result->mode_sent) {
-            RCLCPP_INFO(getLogger(), "Mode changed to: %s", mode.c_str());
-            return true;
-        }
+    const auto future = setModeClient_->async_send_request(request).future.share();
+    RCLCPP_INFO(this->getLogger(), "Setting up mode to: %s", mode.c_str());
+
+    if (future.valid() == false) {
+      RCLCPP_WARN(this->getLogger(), "Future object was in undefined state.");
+      return false;
     }
-    
-    RCLCPP_ERROR(getLogger(), "Failed to set mode to: %s", mode.c_str());
-    return false;
+
+    const auto result = future.get();
+
+    if (result->mode_sent) {
+        RCLCPP_INFO(getLogger(), "Mode changed to: %s", mode.c_str());
+        return true;
+    }else{
+        RCLCPP_ERROR(getLogger(), "Failed to set mode to: %s", mode.c_str());
+        return false;
+    }
 }
 
 void ArduRoverDriver::stateCallback(const mavros_msgs::msg::State::SharedPtr msg)
