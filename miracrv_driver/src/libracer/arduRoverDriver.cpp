@@ -10,6 +10,9 @@ ArduRoverDriver::ArduRoverDriver(rclcpp::Node::SharedPtr node)
     : BaseDriver(node, "/miracrv/cmd_vel", "/miracrv/odom")
     , autoArm_(false)
     , defaultMode_("GUIDED")
+    , maxLinearX_(0.5)
+    , maxLinearY_(0.5)
+    , maxAngularZ_(0.5)
 {
     // 初始化currentState_以避免未定义行为
     currentState_ = mavros_msgs::msg::State();
@@ -57,10 +60,9 @@ void ArduRoverDriver::cmdVelCallback(const geometry_msgs::msg::TwistStamped::Sha
 {
     // 将TwistStamped转换为车体坐标系速度控制
     setBodyVelocity(
-        msg->twist.linear.x,
-        msg->twist.linear.y,
-        msg->twist.angular.z
-    );
+        Bound<double>(msg->twist.linear.x, maxLinearX_),
+        Bound<double>(msg->twist.linear.y, maxLinearY_),
+        Bound<double>(msg->twist.angular.z, maxAngularZ_));
 }
 
 void ArduRoverDriver::setBodyVelocity(double vx, double vy, double yawRate)
@@ -98,6 +100,9 @@ void ArduRoverDriver::setBodyVelocity(double vx, double vy, double yawRate)
     
     // 发布消息
     positionTargetPub_->publish(rawTarget);
+    RCLCPP_INFO(getLogger(), "Setting Speed Body: vx=%.6f, vy=%.6f, yawrate=%.6f", 
+            vx, vy, yawRate);
+
 }
 
 void ArduRoverDriver::setBreak()
@@ -276,6 +281,14 @@ bool ArduRoverDriver::waitForConnection(double timeout)
     }
     
     return false;
+}
+
+void ArduRoverDriver::setMoveSpeedLimit(double maxLinearX, double maxLinearY, double maxAngularZ)
+{
+    RCLCPP_INFO(getLogger(), "Setting Speed Limit to: X: %0.2f, Y: %0.2f, YAW: %0.2f", maxLinearX, maxLinearY, maxAngularZ);
+    maxLinearX_ = maxLinearX;
+    maxLinearY_ = maxLinearY;
+    maxAngularZ_ = maxAngularZ;
 }
 
 } // namespace libracer

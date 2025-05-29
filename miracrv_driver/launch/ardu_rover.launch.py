@@ -11,7 +11,7 @@ def generate_launch_description():
 
     # 配置文件路径参数
     config_file_arg = DeclareLaunchArgument(
-        'config_file',
+        'miracrv_driver_config_file',
         default_value=PathJoinSubstitution([miracrv_driver_share, 'config', 'ardu_rover.yaml']),
         description='Path to the configuration file'
     )
@@ -35,16 +35,16 @@ def generate_launch_description():
         description='Default vehicle mode'
     )
     
-    gps_origin_lat_arg = DeclareLaunchArgument(
-        'gps_origin_lat',
+    gp_origin_lat_arg = DeclareLaunchArgument(
+        'gp_origin_lat',
         default_value='39.979982',
-        description='GPS origin latitude'
+        description='GP origin latitude'
     )
     
-    gps_origin_lon_arg = DeclareLaunchArgument(
-        'gps_origin_lon',
+    gp_origin_lon_arg = DeclareLaunchArgument(
+        'gp_origin_lon',
         default_value='116.335492',
-        description='GPS origin longitude'
+        description='GP origin longitude'
     )
     
     # ArduRover节点
@@ -55,19 +55,20 @@ def generate_launch_description():
         output='screen',
         parameters=[
             # 首先加载yaml文件
-            LaunchConfiguration('config_file'),
+            LaunchConfiguration('miracrv_driver_config_file'),
             # 然后覆盖特定参数（如果需要）
             {
-                'config_file' : LaunchConfiguration('config_file')
+                'miracrv_driver_config_file' : LaunchConfiguration('miracrv_driver_config_file')
                 # 'auto_arm': LaunchConfiguration('auto_arm'),
                 # 'default_mode': LaunchConfiguration('default_mode'),
-                # 'gps_origin_lat': LaunchConfiguration('gps_origin_lat'),
-                # 'gps_origin_lon': LaunchConfiguration('gps_origin_lon')
+                # 'gp_origin_lat': LaunchConfiguration('gp_origin_lat'),
+                # 'gp_origin_lon': LaunchConfiguration('gp_origin_lon')
             }
         ],
         # 话题重映射
         remappings=[
-            # ('/cmd_vel', '/miracrv/cmd_vel'),  # 如果需要重映射
+            # ('/miracrv/cmd_vel', '/cmd_vel'),  # 如果需要重映射
+            # ('/miracrv/odom', '/odometry'),  # 如果需要重映射
         ]
     )
     
@@ -76,8 +77,8 @@ def generate_launch_description():
         config_file_arg,
         auto_arm_arg,
         default_mode_arg,
-        gps_origin_lat_arg,
-        gps_origin_lon_arg,
+        gp_origin_lat_arg,
+        gp_origin_lon_arg,
         # 节点
         ardu_rover_node
     ])

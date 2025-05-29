@@ -28,16 +28,6 @@ public:
             rclcpp::shutdown();
             return;
         }
-
-        // 设置GPS原点（如果启用）
-        if (this->get_parameter("gps_origin.enabled").as_bool()) {
-            double lat = this->get_parameter("gps_origin.latitude").as_double();
-            double lon = this->get_parameter("gps_origin.longitude").as_double();
-            // double alt = this->get_parameter("gps_origin.altitude").as_double();
-            if (std::abs(lat) > 0.0 && std::abs(lon) > 0.0) {
-            driver_->setGlobalOrigin(lat, lon);
-            }
-        }
         
         // 创建定时器进行状态检查
         stateTimer_ = this->create_wall_timer(
@@ -51,10 +41,12 @@ public:
             driver_->setOdomFrameId(this->get_parameter("tf.odom_frame_id").as_string());
         }
 
-        // 保存速度限制供后续使用
-        maxLinearX_ = this->get_parameter("velocity_limits.max_linear_x").as_double();
-        maxLinearY_ = this->get_parameter("velocity_limits.max_linear_y").as_double();
-        maxAngularZ_ = this->get_parameter("velocity_limits.max_angular_z").as_double();
+        // 设置速度限制
+        driver_->setMoveSpeedLimit(
+            this->get_parameter("velocity_limits.max_linear_x").as_double(),
+            this->get_parameter("velocity_limits.max_linear_y").as_double(),
+            this->get_parameter("velocity_limits.max_angular_z").as_double()
+        );
         
         // 如果启用watchdog，创建watchdog定时器
         // if (this->get_parameter("safety.enable_watchdog").as_bool()) {
@@ -65,7 +57,7 @@ public:
         // }
         
         RCLCPP_INFO(this->get_logger(), "ArduRover node started with configuration from: %s",
-                    this->get_parameter("config_file").as_string().c_str());
+                    this->get_parameter("miracrv_driver_config_file").as_string().c_str());
     }
 
 private:
@@ -74,18 +66,18 @@ private:
         // 基本参数
         this->declare_parameter("auto_arm", false);
         this->declare_parameter("default_mode", "GUIDED");
-        this->declare_parameter("config_file", "none");
+        this->declare_parameter("miracrv_driver_config_file", "none");
         
         // GPS原点参数
-        this->declare_parameter("gps_origin.enabled", true);
-        this->declare_parameter("gps_origin.latitude", 0.0);
-        this->declare_parameter("gps_origin.longitude", 0.0);
-        // this->declare_parameter("gps_origin.altitude", 0.0);
+        this->declare_parameter("gp_origin.enabled", true);
+        this->declare_parameter("gp_origin.latitude", 0.0);
+        this->declare_parameter("gp_origin.longitude", 0.0);
+        // this->declare_parameter("gp_origin.altitude", 0.0);
         
         // 速度限制参数
-        this->declare_parameter("velocity_limits.max_linear_x", 5.0);
-        this->declare_parameter("velocity_limits.max_linear_y", 2.0);
-        this->declare_parameter("velocity_limits.max_angular_z", 1.0);
+        this->declare_parameter("velocity_limits.max_linear_x", 0.5);
+        this->declare_parameter("velocity_limits.max_linear_y", 0.5);
+        this->declare_parameter("velocity_limits.max_angular_z", 0.2);
         
         // 超时参数
         this->declare_parameter("timeouts.connection", 5.0);
@@ -121,6 +113,15 @@ private:
         if (currentState.mode != defaultMode) {
             if (driver_->setMode(defaultMode)) {
                 modeSet_ = true;
+                // 设置GPS原点（如果启用）
+                if (this->get_parameter("gp_origin.enabled").as_bool()) {
+                    double lat = this->get_parameter("gp_origin.latitude").as_double();
+                    double lon = this->get_parameter("gp_origin.longitude").as_double();
+                    // double alt = this->get_parameter("gp_origin.altitude").as_double();
+                    if (std::abs(lat) > 0.0 && std::abs(lon) > 0.0) {
+                        driver_->setGlobalOrigin(lat, lon);
+                    }
+                }
             }
         }else{
             modeSet_ = true;
@@ -153,11 +154,6 @@ private:
     rclcpp::TimerBase::SharedPtr stateTimer_;
     // rclcpp::TimerBase::SharedPtr watchdogTimer_;
     bool modeSet_ = false;
-
-    // 速度限制
-    double maxLinearX_;
-    double maxLinearY_;
-    double maxAngularZ_;
     
     // Watchdog
     // rclcpp::Time lastCmdTime_;

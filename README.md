@@ -47,4 +47,43 @@
 
 其他参数如遥控器接收机，电调类型等需要根据购买的型号不同来修改相关参数，并且在修改完上述参数后还需要常规的进行校准加速度计、校准水平、校准遥控器、校准磁罗盘等操作，可以使用MissionPlanner地面站完成。
 
+## 安装和构建软件包
+
+首先，创建一个工作区，比如
+
+```bash
+mkdir -p ros2_ws/src
+cd ros2_ws/src
+```
+
+随后克隆本仓库和镭神雷达仓库
+
+```bash
+git clone -b M10P/N10P https://github.com/Lslidar/Lslidar_ROS2_driver.git
+git clone https://github.com/discodyer/miracrv.git
+```
+
+构建镭神雷达的时候可能需要额外安装这个包
+
+```bash
 sudo apt-get install libpcap0.8-dev
+```
+
+然后构建工作区
+
+```bash
+cd ..
+colcon build
+source ./install/setup.bash
+```
+
+运行整个代码只需要执行两个launch文件
+
+```bash
+# 启动 mavros、lslidar、miracrv_driver、tf_to_odom、cartographer
+ros2 launch miracrv_bringup miracrv.launch.py
+# 启动 navigation2
+ros2 launch miracrv_bringup navigation.launch.py
+```
+
+![alt text](image.png)

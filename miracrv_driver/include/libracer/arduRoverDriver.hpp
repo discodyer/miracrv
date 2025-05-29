@@ -63,6 +63,14 @@ public:
     bool setMoveSpeed(double speed);
 
     /**
+     * @brief 设置移动速度限制
+     * @param maxLinearX 速度值（米/秒）
+     * @param maxLinearY 速度值（米/秒）
+     * @param maxAngularZ 旋转速度（弧度/秒）
+     */
+    void setMoveSpeedLimit(double maxLinearX, double maxLinearY, double maxAngularZ);
+
+    /**
      * @brief 设置飞行模式
      * @param mode 模式名称（如"GUIDED", "MANUAL"等）
      * @return 设置是否成功
@@ -146,6 +154,12 @@ private:
     // 配置参数
     bool autoArm_;
     std::string defaultMode_;
+
+    // 速度限制
+    double maxLinearX_;
+    double maxLinearY_;
+    double maxAngularZ_;
+
 };
 
 } // namespace libracer

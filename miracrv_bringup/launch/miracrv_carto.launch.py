@@ -55,18 +55,6 @@ def generate_launch_description():
         default_value='true',
         description='Enable Cartographer'
     )
-
-    enable_ardu_rover_arg = DeclareLaunchArgument(
-        'enable_ardu_rover',
-        default_value='true',
-        description='Enable ArduRover driver'
-    )
-
-    enable_navigation_arg = DeclareLaunchArgument(
-        'enable_navigation',
-        default_value='true',
-        description='Enable Navigation stack'
-    )
     
     # 获取参数
     model_path = LaunchConfiguration('model_path')
@@ -76,8 +64,6 @@ def generate_launch_description():
     enable_mavros = LaunchConfiguration('enable_mavros')
     enable_lidar = LaunchConfiguration('enable_lidar')
     enable_cartographer = LaunchConfiguration('enable_cartographer')
-    enable_ardu_rover = LaunchConfiguration('enable_ardu_rover')
-    enable_navigation = LaunchConfiguration('enable_navigation')
     
     # 条件启动各个组件
     urdf_display = IncludeLaunchDescription(
@@ -145,42 +131,6 @@ def generate_launch_description():
         }.items(),
         condition=IfCondition(enable_cartographer)
     )
-
-    # 添加ardu_rover启动
-    ardu_rover_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([
-                FindPackageShare('miracrv_driver'),
-                'launch',
-                'ardu_rover.launch.py'
-            ])
-        ]),
-        launch_arguments={
-            'use_sim_time': use_sim_time
-        }.items(),
-        condition=IfCondition(enable_ardu_rover)
-    )
-
-    # 获取miracrv_bringup包的路径
-    miracrv_bringup_dir = FindPackageShare('miracrv_bringup')
-
-    # 构建navigation.launch.py的完整路径
-    navigation_launch_path = PathJoinSubstitution([
-        miracrv_bringup_dir,
-        'launch',
-        'navigation.launch.py'
-    ])
-
-    # 创建包含navigation launch文件的动作
-    navigation_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(navigation_launch_path),
-        # 如果需要传递参数，可以在这里添加
-        # launch_arguments={
-        #     'param_name': 'param_value',
-        #     'use_sim_time': 'true',
-        # }.items()
-        condition=IfCondition(enable_navigation)
-    )
     
     return LaunchDescription([
         # 参数声明
@@ -191,8 +141,6 @@ def generate_launch_description():
         enable_mavros_arg,
         enable_lidar_arg,
         enable_cartographer_arg,
-        enable_ardu_rover_arg,
-        enable_navigation_arg,
         
         # 启动信息
         LogInfo(msg='Starting Ardupilot ROS2 system...'),
@@ -202,10 +150,8 @@ def generate_launch_description():
         tf_to_odom_node,
         TimerAction(period=1.0, actions=[lslidar_launch]),
         TimerAction(period=3.0, actions=[mavros_launch]),
-        TimerAction(period=5.0, actions=[ardu_rover_launch]),
         TimerAction(period=5.0, actions=[cartographer_launch]),
-        # TimerAction(period=10.0, actions=[navigation_launch]),
-
+        
         # 完成提示
         TimerAction(
             period=6.0,
