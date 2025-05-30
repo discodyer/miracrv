@@ -87,3 +87,15 @@ ros2 launch miracrv_bringup navigation.launch.py
 ```
 
 ![alt text](image.png)
+
+## 软件功能介绍
+
+- `mavros` 这个节点的作用是和小车通信，这个节点提供了若干服务和话题和小车通信，首先需要往外部位姿估计接口传入里程计信息（/mavros/vision_pose/pose geometry_msgs:PoseStamped）然后小车内的EKF3就会在话题(/mavros/local_position/odom)里发布融合后的里程计信息，随后通过一系列解锁操作，就可以通过速度控制接口控制小车（/mavros/setpoint_raw/local mavros_msgs:PositionTarget）
+
+- `tf_to_odom.py` 这个节点的作用是把cartographer发布的tf坐标变换转换成发布给小车的外部里程计信息（/mavros/vision_pose/pose geometry_msgs:PoseStamped）其中需要进行一些坐标变换，转换成NED坐标系传给小车。需要注意的是这个话题(/mavros/local_position/odom)发布的是EKF3融合后的里程计信息，如果直接再喂给cartographer的话，由于存在延迟，会导致cartographer中的定位出现像游戏卡顿一样的回退。
+
+- `Lslidar_driver` 激光雷达的驱动包，负责提供/scan话题
+
+- `Navigation2` 提供导航功能，但是由于未知原因，只能单独启动，不能和其他节点合并到一个launch文件内启动
+
+- `MiracRV_Driver` 提供和小车交互的一系列操作，自动切换模式和解锁等，并且监听话题`/miracrv/cmd_vel`里的`TwistStamped`消息，然后转换成（/mavros/setpoint_raw/local mavros_msgs:PositionTarget）控制小车移动。
