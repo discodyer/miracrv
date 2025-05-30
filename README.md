@@ -104,6 +104,8 @@ ros2 launch miracrv_bringup navigation.launch.py
 
 - 由于缺少里程计，后面计划重写一个小车底层驱动板，能输出IMU和编码器的里程计信息，并且可以分别控制四个电机
 
+- navgation2的配置有一些问题，侧向移动和后退都有问题
+
 - 添加小车模型和仿真环境
 
 - 移植到openEuler上运行
