@@ -99,3 +99,13 @@ ros2 launch miracrv_bringup navigation.launch.py
 - `Navigation2` 提供导航功能，但是由于未知原因，只能单独启动，不能和其他节点合并到一个launch文件内启动
 
 - `MiracRV_Driver` 提供和小车交互的一系列操作，自动切换模式和解锁等，并且监听话题`/miracrv/cmd_vel`里的`TwistStamped`消息，然后转换成（/mavros/setpoint_raw/local mavros_msgs:PositionTarget）控制小车移动。
+
+## 后续规划
+
+- 由于缺少里程计，后面计划重写一个小车底层驱动板，能输出IMU和编码器的里程计信息，并且可以分别控制四个电机
+
+- 添加小车模型和仿真环境
+
+- 移植到openEuler上运行
+
+- 移植到RISC-V开发板上运行
