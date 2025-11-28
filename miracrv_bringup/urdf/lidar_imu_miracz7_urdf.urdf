@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="my_robot">
+
+  <!-- 定义基础坐标系（可选，通常由上层URDF提供） -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="0.3 0.2 0.003"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0 0 0.8 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- 1. 定义IMU坐标系 -->
+  <!-- <link name="imu_link">
+    <visual>
+      <geometry>
+        <box size="0.3 0.2 0.1"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0 0 0.8 1"/>
+      </material>
+    </visual>
+  </link> -->
+
+  <!-- IMU与base_link的连接（假设IMU安装在机器人中心） -->
+  <!-- <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint> -->
+
+  <!-- 2. 定义激光雷达坐标系 -->
+  <link name="laser_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.036" radius="0.026"/>  <!-- 雷达物理尺寸示意 -->
+      </geometry>
+      <material name="red">
+        <color rgba="0.8 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- 雷达与IMU的连接 -->
+  <joint name="laser_joint" type="fixed">
+    <parent link="base_link"/>  <!-- 父坐标系是base_link -->
+    <child link="laser_link"/> <!-- 子坐标系是laser_link -->
+    <origin xyz="0 0 0.1136" rpy="0 0 0"/>  <!-- 上方1136mm，无旋转 -->
+  </joint>
+
+  <!-- 3. 定义投影坐标系 -->
+  <link name="base_footprint"/>
+
+  <!-- 投影与base_link的连接 -->
+  <joint name="footprint_joint" type="fixed">
+    <parent link="base_footprint"/>  <!-- 父坐标系是base_footprint -->
+    <child link="base_link"/> <!-- 子坐标系是base_link -->
+    <origin xyz="0 0 0.0625" rpy="0 0 0"/>
+  </joint>
+
+</robot>

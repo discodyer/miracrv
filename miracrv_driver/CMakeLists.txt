@@ -102,7 +102,8 @@ install(TARGETS ardu_rover_node
 # see here: https://docs.ros.org/en/rolling/Tutorials/Beginner-Client-Libraries/Single-Package-Define-And-Use-Interface.html#link-against-the-interface
 
 install(PROGRAMS
-  scripts/tf_to_odom.py  # 假设脚本放在scripts目录下
+  scripts/tf_to_odom.py
+  scripts/odom_to_tf_broadcaster.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
